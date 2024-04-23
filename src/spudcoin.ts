@@ -1,8 +1,20 @@
 /* eslint-disable no-console */
 /* eslint-disable max-len */
 
-import { Account, AccountAddress, Aptos, AptosConfig, Network, NetworkToNetworkName } from "@aptos-labs/ts-sdk";
+import dotenv from "dotenv"
+import {
+  Account,
+  AccountAddress,
+  Aptos,
+  AptosConfig,
+  Ed25519PrivateKey,
+  Network,
+  NetworkToNetworkName,
+} from "@aptos-labs/ts-sdk";
+import fs from "fs";
 import { compilePackage, getPackageBytesToPublish } from "./utils";
+
+dotenv.config()
 
 /**
  * This example demonstrate how one can publish a new custom coin to chain.
@@ -21,6 +33,18 @@ const DECIMALS = 9;
 const APTOS_NETWORK: Network = NetworkToNetworkName[process.env.APTOS_NETWORK] || Network.DEVNET;
 const config = new AptosConfig({ network: APTOS_NETWORK });
 const aptos = new Aptos(config);
+
+function initAccount() {
+  if (!process.env.PRIVATE_KEY) {
+    console.log("Creating .env file");
+    const alice = Account.generate();
+    fs.writeFileSync(".env", `PRIVATE_KEY=${alice.privateKey.toString()}\nADDRESS=${alice.accountAddress.toString()}`);
+    return alice;
+  }
+  const secret = process.env.PRIVATE_KEY;
+  const pk = new Ed25519PrivateKey(secret);
+  return Account.fromPrivateKey({privateKey: pk, address: process.env.ADDRESS});
+}
 
 /** Register the receiver account to receive transfers for the new coin. */
 async function registerCoin(receiver: Account, coinTypeAddress: AccountAddress): Promise<string> {
@@ -67,7 +91,7 @@ const getBalance = async (accountAddress: AccountAddress, coinTypeAddress: Accou
 };
 
 async function main() {
-  const alice = Account.generate();
+  const alice = initAccount();
 
   console.log("\n=== Addresses ===");
   console.log(`Alice: ${alice.accountAddress.toString()}`);

@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@aptos-labs/aptos-cli':
-        specifier: ^0.1.2
-        version: 0.1.2
       '@aptos-labs/aptos-client':
         specifier: ^0.1.0
         version: 0.1.0
@@ -85,10 +82,6 @@ packages:
   '@ampproject/remapping@2.2.1':
     resolution: {integrity: sha512-lFMjJTrFL3j7L9yBxwYfCq2k6qqwHyzuUl/XBnif78PWTJYyL/dfowQHWE3sp6U6ZzqWiiIZnpTMO96zhkjwtg==}
     engines: {node: '>=6.0.0'}
-
-  '@aptos-labs/aptos-cli@0.1.2':
-    resolution: {integrity: sha512-MCi+9xPDG/Fx6c6b9ACqyQBYJLHqKJQKB8lay/1sUNJ2mNBB2OU1Lkmd5pmjUG1JbZ5cg2Fmgid5iMKdTnphhA==}
-    hasBin: true
 
   '@aptos-labs/aptos-client@0.1.0':
     resolution: {integrity: sha512-q3s6pPq8H2buGp+tPuIRInWsYOuhSEwuNJPwd2YnsiID3YSLihn2ug39ktDJAcSOprUcp7Nid8WK7hKqnUmSdA==}
@@ -2716,8 +2709,6 @@ snapshots:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.18
-
-  '@aptos-labs/aptos-cli@0.1.2': {}
 
   '@aptos-labs/aptos-client@0.1.0':
     dependencies:
