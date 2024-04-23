@@ -4,7 +4,6 @@
     "spudcoin": "ts-node src/spudcoin.ts"
   },
   "dependencies": {
-    "@aptos-labs/aptos-cli": "^0.1.2",
     "@aptos-labs/aptos-client": "^0.1.0",
     "@aptos-labs/ts-sdk": "^1.13.0"
   },

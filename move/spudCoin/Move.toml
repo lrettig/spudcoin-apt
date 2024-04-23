@@ -1,9 +1,9 @@
 [package]
-name = "MoonCoin"
+name = "SpudCoin"
 version = "0.0.0"
 
 [addresses]
-MoonCoin = "_"
+SpudCoin = "_"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"

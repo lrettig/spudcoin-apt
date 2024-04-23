@@ -6,7 +6,7 @@ import { compilePackage, getPackageBytesToPublish } from "./utils";
 
 /**
  * This example demonstrate how one can publish a new custom coin to chain.
- * It uses the MoonCoin.move module that can be found in this folder
+ * It uses the SpudCoin.move module that can be found in this folder
  *
  * Before running this example, we should compile the package locally:
  * 1. Acquire the Aptos CLI, see https://aptos.dev/cli-tools/aptos-cli/use-cli/install-aptos-cli
@@ -14,8 +14,8 @@ import { compilePackage, getPackageBytesToPublish } from "./utils";
  * 3. Run `pnpm run your_coin`
  */
 
-const MOON_COINS_TO_MINT = 100;
-const MOON_COINS_TO_TRANSFER = 100;
+const COINS_TO_MINT = 1_000_000;
+const DECIMALS = 9;
 
 // Setup the client
 const APTOS_NETWORK: Network = NetworkToNetworkName[process.env.APTOS_NETWORK] || Network.DEVNET;
@@ -28,33 +28,12 @@ async function registerCoin(receiver: Account, coinTypeAddress: AccountAddress):
     sender: receiver.accountAddress,
     data: {
       function: "0x1::managed_coin::register",
-      typeArguments: [`${coinTypeAddress}::moon_coin::MoonCoin`],
+      typeArguments: [`${coinTypeAddress}::spud_coin::SpudCoin`],
       functionArguments: [],
     },
   });
 
   const senderAuthenticator = aptos.transaction.sign({ signer: receiver, transaction });
-  const pendingTxn = await aptos.transaction.submit.simple({ transaction, senderAuthenticator });
-
-  return pendingTxn.hash;
-}
-
-/** Transfer the newly created coin to a specified receiver address */
-async function transferCoin(
-  sender: Account,
-  receiverAddress: AccountAddress,
-  amount: number | bigint,
-): Promise<string> {
-  const transaction = await aptos.transaction.build.simple({
-    sender: sender.accountAddress,
-    data: {
-      function: "0x1::aptos_account::transfer_coins",
-      typeArguments: [`${sender.accountAddress}::moon_coin::MoonCoin`],
-      functionArguments: [receiverAddress, amount],
-    },
-  });
-
-  const senderAuthenticator = aptos.transaction.sign({ signer: sender, transaction });
   const pendingTxn = await aptos.transaction.submit.simple({ transaction, senderAuthenticator });
 
   return pendingTxn.hash;
@@ -66,7 +45,7 @@ async function mintCoin(minter: Account, receiverAddress: AccountAddress, amount
     sender: minter.accountAddress,
     data: {
       function: "0x1::managed_coin::mint",
-      typeArguments: [`${minter.accountAddress}::moon_coin::MoonCoin`],
+      typeArguments: [`${minter.accountAddress}::spud_coin::SpudCoin`],
       functionArguments: [receiverAddress, amount],
     },
   });
@@ -81,33 +60,30 @@ async function mintCoin(minter: Account, receiverAddress: AccountAddress, amount
 const getBalance = async (accountAddress: AccountAddress, coinTypeAddress: AccountAddress) => {
   const amount = await aptos.getAccountCoinAmount({
     accountAddress,
-    coinType: `${coinTypeAddress.toString()}::moon_coin::MoonCoin`,
+    coinType: `${coinTypeAddress.toString()}::spud_coin::SpudCoin`,
   });
 
   return amount;
 };
 
 async function main() {
-  // Create two accounts, Alice and Bob
   const alice = Account.generate();
-  const bob = Account.generate();
 
   console.log("\n=== Addresses ===");
   console.log(`Alice: ${alice.accountAddress.toString()}`);
-  console.log(`Bob: ${bob.accountAddress.toString()}`);
 
   // Fund alice account
-  await aptos.fundAccount({ accountAddress: alice.accountAddress, amount: 100_000_000 });
+  await aptos.fundAccount({ accountAddress: alice.accountAddress, amount: 100_000_000 * 10 ** DECIMALS });
 
   // Please ensure you have the aptos CLI installed
-  console.log("\n=== Compiling MoonCoin package locally ===");
-  compilePackage("move/moonCoin", "move/moonCoin/moonCoin.json", [{ name: "MoonCoin", address: alice.accountAddress }]);
+  console.log("\n=== Compiling SpudCoin package locally ===");
+  compilePackage("move/spudCoin", "move/spudCoin/spudCoin.json", [{ name: "SpudCoin", address: alice.accountAddress }]);
 
-  const { metadataBytes, byteCode } = getPackageBytesToPublish("move/moonCoin/moonCoin.json");
+  const { metadataBytes, byteCode } = getPackageBytesToPublish("move/spudCoin/spudCoin.json");
 
-  console.log(`\n=== Publishing MoonCoin package to ${aptos.config.network} network ===`);
+  console.log(`\n=== Publishing SpudCoin package to ${aptos.config.network} network ===`);
 
-  // Publish MoonCoin package to chain
+  // Publish SpudCoin package to chain
   const transaction = await aptos.publishPackageTransaction({
     account: alice.accountAddress,
     metadataBytes,
@@ -122,19 +98,15 @@ async function main() {
   console.log(`Publish package transaction hash: ${pendingTransaction.hash}`);
   await aptos.waitForTransaction({ transactionHash: pendingTransaction.hash });
 
-  console.log(`Bob's initial MoonCoin balance: ${await getBalance(bob.accountAddress, alice.accountAddress)}.`);
+  console.log(`Alice's SpudCoin balance: ${await getBalance(alice.accountAddress, alice.accountAddress)}.`);
 
-  console.log(`Alice mints herself ${MOON_COINS_TO_MINT} MoonCoin.`);
+  console.log(`Alice mints herself ${COINS_TO_MINT} SpudCoin.`);
   const registerCoinTransactionHash = await registerCoin(alice, alice.accountAddress);
   await aptos.waitForTransaction({ transactionHash: registerCoinTransactionHash });
 
-  const mintCoinTransactionHash = await mintCoin(alice, alice.accountAddress, MOON_COINS_TO_MINT);
+  const mintCoinTransactionHash = await mintCoin(alice, alice.accountAddress, COINS_TO_MINT * 10 ** DECIMALS);
   await aptos.waitForTransaction({ transactionHash: mintCoinTransactionHash });
-
-  console.log(`Alice transfers ${MOON_COINS_TO_TRANSFER} MoonCoin to Bob.`);
-  const transferCoinTransactionHash = await transferCoin(alice, bob.accountAddress, MOON_COINS_TO_TRANSFER);
-  await aptos.waitForTransaction({ transactionHash: transferCoinTransactionHash });
-  console.log(`Bob's updated MoonCoin balance: ${await getBalance(bob.accountAddress, alice.accountAddress)}.`);
+  console.log(`Alice's updated SpudCoin balance: ${await getBalance(alice.accountAddress, alice.accountAddress)}.`);
 }
 
 main();
